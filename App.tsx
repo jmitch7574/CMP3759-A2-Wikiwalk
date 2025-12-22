@@ -1,12 +1,46 @@
+import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import { StatusBar } from 'expo-status-bar';
-import { StyleSheet, Text, View } from 'react-native';
+import { StyleSheet, Text, TouchableOpacity, View } from 'react-native';
+import WikiMapView from './src/views/WikiMapView';
+import MaterialCommunityIcons from '@expo/vector-icons/MaterialCommunityIcons';
+import { NavigationContainer } from '@react-navigation/native';
+
+const Tabs = createBottomTabNavigator();
 
 export default function App() {
   return (
-    <View style={styles.container}>
-      <Text>Open up App.tsx to start working on your app!</Text>
-      <StatusBar style="auto" />
-    </View>
+    <NavigationContainer>
+      <Tabs.Navigator>
+        <Tabs.Screen
+          name="Collection"
+          component={WikiMapView}
+          options={{
+            tabBarIcon: ({ color, size }) => (
+              <MaterialCommunityIcons name="book" color={color} size={size}></MaterialCommunityIcons>
+            ),
+          }}
+        />
+        <Tabs.Screen
+          name="Map"
+          component={WikiMapView}
+          options={{
+            headerShown: false,
+            tabBarIcon: ({ color, size }) => (
+              <MaterialCommunityIcons name="map" color={color} size={size}></MaterialCommunityIcons>
+            )
+          }}
+        />
+        <Tabs.Screen
+          name="Milestones"
+          component={WikiMapView}
+          options={{
+            tabBarIcon: ({ color, size }) => (
+              <MaterialCommunityIcons name="trophy" color={color} size={size}></MaterialCommunityIcons>
+            ),
+          }}
+        />
+      </Tabs.Navigator>
+    </NavigationContainer>
   );
 }
 
@@ -16,5 +50,23 @@ const styles = StyleSheet.create({
     backgroundColor: '#fff',
     alignItems: 'center',
     justifyContent: 'center',
+  },
+  middleButtonContainer: {
+    top: -30,                      // ← pushes it OUT of the bar
+    justifyContent: "center",
+    alignItems: "center",
+  },
+  middleButton: {
+    width: 70,
+    height: 70,
+    borderRadius: 35,
+    backgroundColor: "#ffffffff",
+    justifyContent: "center",
+    alignItems: "center",
+    elevation: 6,                  // Android shadow
+    shadowColor: "#000",
+    shadowOpacity: 0.2,
+    shadowRadius: 5,
+    shadowOffset: { width: 0, height: 3 },
   },
 });
