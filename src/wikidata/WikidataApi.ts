@@ -126,3 +126,25 @@ export async function GetArticles(territory: string): Promise<Array<ArticlePoint
 
     return ArticleCollection;
 }
+
+export async function GetArticleText(article: ArticlePoint) {
+    const article_url_ending = article.articleURL.split('/').pop();
+    const url = `https://en.wikipedia.org/w/api.php?format=json&action=query&prop=extracts&explaintext=true&titles=${article_url_ending}`
+
+
+    const data = await axios.get(url, { headers })
+
+
+    if (data.status != 200)
+        return null;
+
+
+    // Workaround since wikipedia returns data indexed by page id which we don't know
+    const lookup = data.data['query']['pages']
+
+    for (let [key, value] of Object.entries(lookup)) {
+        return lookup[key]['extract']
+    }
+
+    return "not found";
+}

@@ -6,12 +6,15 @@ import { MaterialCommunityIcons } from "@expo/vector-icons";
 import { ArticlePoint, GetArticles, GetUserTerritory } from "../wikidata/WikidataApi";
 import { Float } from "react-native/Libraries/Types/CodegenTypes";
 import CustomMarker from "../components/CustomMarker";
+import ArticlePopup, { ArticlePopupContext } from "../components/ArticlePopup";
+import BottomSheet, { BottomSheetView } from "@gorhom/bottom-sheet";
+import { GestureHandlerRootView } from "react-native-gesture-handler";
+import { Haversine } from "../utils/MapHelper";
 
 export default function WikiMapView() {
 
     const [location, setLocation] = useState<LatLng | null>(null);
-    const [following, setFollowing] = useState<Boolean>(true);
-    const [errorMsg, setErrorMsg] = useState<string | null>(null);
+    const [focusedArticle, setFocusedArticle] = useState<ArticlePopupContext | null>(null);
 
     const [currentPoints, setCurrentPoints] = useState<Array<ArticlePoint> | null>(null);
 
@@ -38,36 +41,13 @@ export default function WikiMapView() {
 
         currentPoints?.map((element, index) => { // Access the index as a fallback key
             markers.push(
-                <CustomMarker onPress={() => setFocusedArticle(element)} key={element.articleId} location={location} articleInfo={element}></CustomMarker>
+                <CustomMarker onPress={(isClose: boolean) => setFocusedArticle({ articleInfo: element, isClose: isClose })} key={element.articleId} location={location} articleInfo={element}></CustomMarker>
             );
         });
 
         return markers;
     }
 
-    function haversine(point1: LatLng, point2: LatLng) {
-        const R = 6371;
-
-        function deg2rad(deg: Float) {
-            return deg * (Math.PI / 180);
-        }
-
-        const dLat = deg2rad(point2.latitude - point1.latitude);
-        const dLon = deg2rad(point2.longitude - point1.longitude);
-
-        const radLat1 = deg2rad(point1.latitude);
-        const radLat2 = deg2rad(point2.latitude);
-
-        const a =
-            Math.sin(dLat / 2) * Math.sin(dLat / 2) +
-            Math.cos(radLat1) * Math.cos(radLat2) * Math.sin(dLon / 2) * Math.sin(dLon / 2);
-
-        const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
-
-        const distance = R * c;
-
-        return distance; // Distance in kilometers
-    }
 
     async function UpdateLocation(event: UserLocationChangeEvent) {
         if (
@@ -85,7 +65,7 @@ export default function WikiMapView() {
         }
 
         // If this is the first time location has been pulled or sufficient distance has been made
-        if (!location || haversine(newLocation, location) > 0.1) {
+        if (!location || Haversine(newLocation, location) > 0.01) {
             await UpdateArticles(newLocation);
         }
 
@@ -112,19 +92,10 @@ export default function WikiMapView() {
         firstLocationPull.current = false;
     }
 
-    let text = 'Waiting...';
-    if (errorMsg) {
-        text = errorMsg;
-    } else if (location) {
-        text = JSON.stringify(location);
-    }
-
     return (
         <View
             style={{
-                flex: 1,
-                justifyContent: "center",
-                alignItems: "center",
+                flex: 1
             }}
         >
             {/* The map */}
@@ -140,9 +111,7 @@ export default function WikiMapView() {
                 </TouchableOpacity>
             </View>
 
-            {focusedArticle ? (
-                <ArticlePopup articleInfo={focusedArticle} isClose={true}></ArticlePopup>
-            ) : null}
+            {focusedArticle && <ArticlePopup articleInfo={focusedArticle.articleInfo} isClose={focusedArticle.isClose} onClose={() => setFocusedArticle(null)}></ArticlePopup>}
 
         </View >
     );
@@ -177,5 +146,15 @@ const styles = StyleSheet.create({
         width: 50,  // Exceeding your 40px limit
         height: 70,
         resizeMode: 'contain',
+    },
+
+    container: {
+        flex: 1,
+        backgroundColor: 'grey',
+    },
+    contentContainer: {
+        flex: 1,
+        padding: 36,
+        alignItems: 'center',
     },
 })
