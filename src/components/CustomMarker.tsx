@@ -1,7 +1,9 @@
 import { LatLng, Marker } from "react-native-maps";
 import { ArticlePoint } from "../wikidata/WikidataApi";
-import { useEffect, useState } from "react";
+import { useContext, useEffect, useState } from "react";
 import { Haversine } from "../utils/MapHelper";
+import { useContentWidth } from "react-native-render-html";
+import { DebugContext } from "../context/DebugContext";
 
 export type MarkerProps = {
     articleInfo: ArticlePoint,
@@ -13,6 +15,7 @@ export type MarkerProps = {
 export default function CustomMarker(props: MarkerProps) {
     const { articleInfo, location } = props
     const [isClose, setIsClose] = useState(false);
+    const debugMode = useContext(DebugContext);
 
     const ArticleRange = 0.1; // 100 meters
 
@@ -23,8 +26,8 @@ export default function CustomMarker(props: MarkerProps) {
 
     // Update marker state when user location changes
     useEffect(() => {
-        setIsClose(Haversine(articleInfo.coords, location) <= 0.1);
-    }, [location]);
+        setIsClose(Haversine(articleInfo.coords, location) <= 0.1 || debugMode);
+    }, [location, debugMode]);
 
     function GetIcon() {
         // TODO: Logic for already in collection, do once collection is written

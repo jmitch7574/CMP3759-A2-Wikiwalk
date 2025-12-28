@@ -6,47 +6,52 @@ import MaterialCommunityIcons from '@expo/vector-icons/MaterialCommunityIcons';
 import { NavigationContainer } from '@react-navigation/native';
 import { GestureDetector, GestureHandlerRootView } from 'react-native-gesture-handler';
 import BottomSheet, { BottomSheetView } from '@gorhom/bottom-sheet';
+import { DebugProvider } from './src/context/DebugContext';
+import Toast from 'react-native-toast-message';
 
 const Tabs = createBottomTabNavigator();
 
 export default function App() {
   return (
-    <GestureHandlerRootView style={{ flex: 1 }}>
-      <NavigationContainer>
-        <Tabs.Navigator>
-          <Tabs.Screen
-            name="Collection"
-            component={WikiMapView}
-            options={{
-              tabBarIcon: ({ color, size }) => (
-                <MaterialCommunityIcons name="book" color={color} size={size}></MaterialCommunityIcons>
-              ),
-            }}
-          />
-          <Tabs.Screen
-            name="Map"
-            component={WikiMapView}
-            options={{
-              headerShown: false,
-              tabBarIcon: ({ color, size }) => (
-                <MaterialCommunityIcons name="map" color={color} size={size}></MaterialCommunityIcons>
-              )
-            }}
-          />
-          <Tabs.Screen
-            name="Milestones"
-            component={WikiMapView}
-            options={{
-              tabBarIcon: ({ color, size }) => (
-                <MaterialCommunityIcons name="trophy" color={color} size={size}></MaterialCommunityIcons>
-              ),
-            }}
-          />
-        </Tabs.Navigator>
-      </NavigationContainer>
-
-
-    </GestureHandlerRootView>
+    <View style={{ flex: 1 }}>
+      <GestureHandlerRootView>
+        <DebugProvider>
+          <NavigationContainer>
+            <Tabs.Navigator>
+              <Tabs.Screen
+                name="Collection"
+                component={WikiMapView}
+                options={{
+                  tabBarIcon: ({ color, size }) => (
+                    <MaterialCommunityIcons name="book" color={color} size={size}></MaterialCommunityIcons>
+                  ),
+                }}
+              />
+              <Tabs.Screen
+                name="Map"
+                component={WikiMapView}
+                options={{
+                  headerShown: false,
+                  tabBarIcon: ({ color, size }) => (
+                    <MaterialCommunityIcons name="map" color={color} size={size}></MaterialCommunityIcons>
+                  )
+                }}
+              />
+              <Tabs.Screen
+                name="Milestones"
+                component={WikiMapView}
+                options={{
+                  tabBarIcon: ({ color, size }) => (
+                    <MaterialCommunityIcons name="trophy" color={color} size={size}></MaterialCommunityIcons>
+                  ),
+                }}
+              />
+            </Tabs.Navigator>
+          </NavigationContainer>
+          <Toast bottomOffset={100} />
+        </DebugProvider>
+      </GestureHandlerRootView>
+    </View>
   );
 }
 
