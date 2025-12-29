@@ -1,5 +1,6 @@
 import { LatLng, Region } from 'react-native-maps';
 import axios from 'axios';
+import { Article, ArticlePoint } from '../data/Location';
 
 const WdqsEndpoint = "https://query.wikidata.org/sparql";
 
@@ -59,12 +60,6 @@ const GetArticlesInTerritoryQuery = `
     }
 	ORDER BY ?placeLabel`
 
-export class ArticlePoint {
-    coords: LatLng = { latitude: 0, longitude: 0 };
-    articleId: string = "";
-    articleURL: string = "";
-    displayName: string = "";
-}
 
 export async function GetUserTerritory(coords: LatLng): Promise<string | null> {
     let parsedQuery = GetTerritoryFromLocationQuery
@@ -100,7 +95,7 @@ export async function GetArticles(territory: string): Promise<Array<ArticlePoint
 
     let ArticleCollection: Array<ArticlePoint> = [];
 
-    data.data['results']['bindings'].forEach(element => {
+    data.data['results']['bindings'].forEach((element: { [x: string]: { [x: string]: any; }; }) => {
         let articleId = element['articleCode']['value']
         let coords: LatLng = { latitude: parseFloat(element['lat']['value']) ?? 0, longitude: parseFloat(element['lon']['value']) ?? 0 }
         let url = element['article']['value']
@@ -108,14 +103,16 @@ export async function GetArticles(territory: string): Promise<Array<ArticlePoint
 
         let currentPoint: ArticlePoint = {
             coords: coords,
-            articleId: articleId,
-            articleURL: url,
-            displayName: displayName
+            article: {
+                id: articleId,
+                url: url,
+                name: displayName
+            }
         };
 
         let foundId = false;
         ArticleCollection.map((existingArticle, index) => {
-            if (existingArticle.articleId == articleId)
+            if (existingArticle.article.id == articleId)
                 foundId = true;
         });
 
@@ -127,8 +124,8 @@ export async function GetArticles(territory: string): Promise<Array<ArticlePoint
     return ArticleCollection;
 }
 
-export async function GetArticleText(article: ArticlePoint) {
-    const article_url_ending = article.articleURL.split('/').pop();
+export async function GetArticleText(article: Article) {
+    const article_url_ending = article.url.split('/').pop();
     const url = `https://en.wikipedia.org/w/api.php?format=json&action=query&prop=extracts&explaintext=true&titles=${article_url_ending}`
 
 

@@ -1,9 +1,9 @@
 import { LatLng, Marker } from "react-native-maps";
-import { ArticlePoint } from "../wikidata/WikidataApi";
 import { useContext, useEffect, useState } from "react";
 import { Haversine } from "../utils/MapHelper";
 import { useContentWidth } from "react-native-render-html";
 import { DebugContext } from "../context/DebugContext";
+import { ArticlePoint } from "../data/Location";
 
 export type MarkerProps = {
     articleInfo: ArticlePoint,

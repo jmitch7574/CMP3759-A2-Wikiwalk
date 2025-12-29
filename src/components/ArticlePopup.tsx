@@ -1,16 +1,17 @@
 import React, { useEffect, useMemo, useState } from "react";
-import { ArticlePoint, GetArticleText } from "../wikidata/WikidataApi"
+import { GetArticleText } from "../wikidata/WikidataApi"
 import { StyleSheet, Text, useWindowDimensions, View } from "react-native";
 import BottomSheet, { BottomSheetScrollView, BottomSheetView } from "@gorhom/bottom-sheet";
 import RenderHTML from 'react-native-render-html';
+import { ArticlePoint } from "../data/Location";
 
 export type ArticlePopupContext = {
-    articleInfo: ArticlePoint,
+    articlePoint: ArticlePoint,
     isClose: boolean,
 }
 
 type ArticlePopupProps = {
-    articleInfo: ArticlePoint,
+    articlePoint: ArticlePoint,
     isClose: boolean,
     onClose?: () => void;
 }
@@ -23,7 +24,7 @@ export default function ArticlePopup(props: ArticlePopupProps) {
 
     useEffect(() => {
         async function GetArticle() {
-            setArticleText(wiky.process(await GetArticleText(props.articleInfo)));
+            setArticleText(wiky.process(await GetArticleText(props.articlePoint.article)));
         }
 
         GetArticle();
@@ -40,7 +41,7 @@ export default function ArticlePopup(props: ArticlePopupProps) {
     return (
         <BottomSheet enablePanDownToClose={true} detached={false} enableDynamicSizing={false} index={0} snapPoints={snapPoints} onChange={(index) => popupHeightChanged(index)}>
             <BottomSheetScrollView style={styles.articleContainer}>
-                <Text style={styles.title}>{props.articleInfo.displayName}</Text>
+                <Text style={styles.title}>{props.articlePoint.article.name}</Text>
                 {props.isClose && (<RenderHTML
                     contentWidth={width}
                     source={{ html: articleText }}

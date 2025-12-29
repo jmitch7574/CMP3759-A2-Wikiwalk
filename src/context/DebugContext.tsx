@@ -1,10 +1,14 @@
-import { useState, createContext, useContext } from 'react';
+import React, { useState, createContext, useContext } from 'react';
 import { Gesture, GestureDetector } from 'react-native-gesture-handler';
 import Toast from 'react-native-toast-message';
 
+export type DebugProviderProps = {
+    children: React.ReactNode;
+}
+
 export const DebugContext = createContext(false);
 
-export function DebugProvider({ children }) {
+export function DebugProvider(props: DebugProviderProps) {
     const [debugMode, setDebugMode] = useState(false);
 
     const longPressGesture = Gesture.LongPress().numberOfPointers(2).runOnJS(true).onEnd((e, success) => {
@@ -22,7 +26,7 @@ export function DebugProvider({ children }) {
     return (
         <GestureDetector gesture={longPressGesture}>
             <DebugContext.Provider value={debugMode}>
-                {children}
+                {props.children}
             </DebugContext.Provider>
         </GestureDetector>
     );

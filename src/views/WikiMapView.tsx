@@ -3,13 +3,14 @@ import MapView, { LatLng, Marker, UserLocationChangeEvent } from 'react-native-m
 import React, { ReactNode, useRef, useState } from "react";
 import { MaterialCommunityIcons } from "@expo/vector-icons";
 
-import { ArticlePoint, GetArticles, GetUserTerritory } from "../wikidata/WikidataApi";
+import { GetArticles, GetUserTerritory } from "../wikidata/WikidataApi";
 import { Float } from "react-native/Libraries/Types/CodegenTypes";
 import CustomMarker from "../components/CustomMarker";
 import ArticlePopup, { ArticlePopupContext } from "../components/ArticlePopup";
 import BottomSheet, { BottomSheetView } from "@gorhom/bottom-sheet";
 import { GestureHandlerRootView } from "react-native-gesture-handler";
 import { Haversine } from "../utils/MapHelper";
+import { ArticlePoint } from "../data/Location";
 
 export default function WikiMapView() {
 
@@ -41,7 +42,7 @@ export default function WikiMapView() {
 
         currentPoints?.map((element, index) => { // Access the index as a fallback key
             markers.push(
-                <CustomMarker onPress={(isClose: boolean) => setFocusedArticle({ articleInfo: element, isClose: isClose })} key={element.articleId} location={location} articleInfo={element}></CustomMarker>
+                <CustomMarker onPress={(isClose: boolean) => setFocusedArticle({ articlePoint: element, isClose: isClose })} key={element.article.id} location={location} articleInfo={element}></CustomMarker>
             );
         });
 
@@ -111,7 +112,7 @@ export default function WikiMapView() {
                 </TouchableOpacity>
             </View>
 
-            {focusedArticle && <ArticlePopup articleInfo={focusedArticle.articleInfo} isClose={focusedArticle.isClose} onClose={() => setFocusedArticle(null)}></ArticlePopup>}
+            {focusedArticle && <ArticlePopup articlePoint={focusedArticle.articlePoint} isClose={focusedArticle.isClose} onClose={() => setFocusedArticle(null)}></ArticlePopup>}
 
         </View >
     );
