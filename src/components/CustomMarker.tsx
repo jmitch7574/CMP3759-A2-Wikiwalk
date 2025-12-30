@@ -35,7 +35,7 @@ export default function CustomMarker({ articleInfo, location, onPress }: MarkerP
 
     return (
         <Marker
-            onPress={() => onPress(isClose)}
+            onPress={() => onPress(isClose || (isCollected ?? false))}
             coordinate={articleInfo.coords}
             anchor={{ x: 0.5, y: 1 }}
             icon={currentIcon}
