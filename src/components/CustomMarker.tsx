@@ -1,50 +1,44 @@
 import { LatLng, Marker } from "react-native-maps";
-import { useContext, useEffect, useState } from "react";
+import { useContext } from "react";
 import { Haversine } from "../utils/MapHelper";
-import { useContentWidth } from "react-native-render-html";
 import { DebugContext } from "../context/DebugContext";
-import { ArticlePoint } from "../data/Location";
+import { Article } from "../data/Location";
+import { CollectionContext } from "../context/CollectionContext";
+
+const ICONS = {
+    available: require('../../assets/map-icons/poi_available.png'),
+    unavailable: require('../../assets/map-icons/poi_unavailable.png'),
+    collected: require('../../assets/map-icons/poi_collected.png'),
+};
 
 export type MarkerProps = {
-    articleInfo: ArticlePoint,
+    articleInfo: Article,
     location: LatLng,
     onPress: (isPopupClose: boolean) => void,
 }
 
-
-export default function CustomMarker(props: MarkerProps) {
-    const { articleInfo, location } = props
-    const [isClose, setIsClose] = useState(false);
+export default function CustomMarker({ articleInfo, location, onPress }: MarkerProps) {
     const debugMode = useContext(DebugContext);
+    const Collection = useContext(CollectionContext);
 
     const ArticleRange = 0.1; // 100 meters
 
-    // Icons
-    const available = require('../../assets/map-icons/poi_available.png');
-    const unavailable = require('../../assets/map-icons/poi_unavailable.png');
-    const collected = require('../../assets/map-icons/poi_collected.png');
+    const isCollected = Collection?.isArticleCollected(articleInfo.id);
+    const isClose = Haversine(articleInfo.coords, location) <= ArticleRange || debugMode;
 
-    // Update marker state when user location changes
-    useEffect(() => {
-        setIsClose(Haversine(articleInfo.coords, location) <= 0.1 || debugMode);
-    }, [location, debugMode]);
-
-    function GetIcon() {
-        // TODO: Logic for already in collection, do once collection is written
-
-        if (isClose) {
-            return available
-        }
-
-        return unavailable;
+    let currentIcon = ICONS.unavailable;
+    if (isCollected) {
+        currentIcon = ICONS.collected;
+    } else if (isClose) {
+        currentIcon = ICONS.available;
     }
 
     return (
         <Marker
-            onPress={() => props.onPress(isClose)}
+            onPress={() => onPress(isClose)}
             coordinate={articleInfo.coords}
             anchor={{ x: 0.5, y: 1 }}
-            icon={GetIcon()}>
-        </Marker>
-    )
+            icon={currentIcon}
+        />
+    );
 }

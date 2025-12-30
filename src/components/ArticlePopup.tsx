@@ -1,17 +1,18 @@
-import React, { useEffect, useMemo, useState } from "react";
-import { GetArticleText } from "../wikidata/WikidataApi"
+import React, { useContext, useEffect, useMemo, useState } from "react";
+import { GetArticleText } from "../services/WikidataApi"
 import { StyleSheet, Text, useWindowDimensions, View } from "react-native";
 import BottomSheet, { BottomSheetScrollView, BottomSheetView } from "@gorhom/bottom-sheet";
 import RenderHTML from 'react-native-render-html';
-import { ArticlePoint } from "../data/Location";
+import { Article } from "../data/Location";
+import { CollectionContext } from "../context/CollectionContext";
 
 export type ArticlePopupContext = {
-    articlePoint: ArticlePoint,
+    article: Article,
     isClose: boolean,
 }
 
 type ArticlePopupProps = {
-    articlePoint: ArticlePoint,
+    article: Article,
     isClose: boolean,
     onClose?: () => void;
 }
@@ -22,12 +23,19 @@ export default function ArticlePopup(props: ArticlePopupProps) {
 
     let wiky = require('wiky.js');
 
+    const Collection = useContext(CollectionContext);
+
     useEffect(() => {
         async function GetArticle() {
-            setArticleText(wiky.process(await GetArticleText(props.articlePoint.article)));
+            setArticleText(wiky.process(await GetArticleText(props.article)));
+        }
+
+        async function SetArticleAsCollected() {
+            await Collection?.claimArticle(props.article);
         }
 
         GetArticle();
+        SetArticleAsCollected()
     }, [])
 
     const popupHeightChanged = (index: number) => {
@@ -41,7 +49,7 @@ export default function ArticlePopup(props: ArticlePopupProps) {
     return (
         <BottomSheet enablePanDownToClose={true} detached={false} enableDynamicSizing={false} index={0} snapPoints={snapPoints} onChange={(index) => popupHeightChanged(index)}>
             <BottomSheetScrollView style={styles.articleContainer}>
-                <Text style={styles.title}>{props.articlePoint.article.name}</Text>
+                <Text style={styles.title}>{props.article.name}</Text>
                 {props.isClose && (<RenderHTML
                     contentWidth={width}
                     source={{ html: articleText }}

@@ -1,6 +1,6 @@
 import { LatLng, Region } from 'react-native-maps';
 import axios from 'axios';
-import { Article, ArticlePoint } from '../data/Location';
+import { Article, Area } from '../data/Location';
 
 const WdqsEndpoint = "https://query.wikidata.org/sparql";
 
@@ -10,7 +10,7 @@ const headers = {
 };
 
 const GetTerritoryFromLocationQuery = `
-	SELECT DISTINCT ?settlementCode ?settlementLabel WHERE {{
+	SELECT DISTINCT ?settlementCode ?settlementLabel ?wikipediaTitle ?article ?countryCode WHERE {{
   
     SERVICE wikibase:around {
         ?place wdt:P625 ?coord .
@@ -32,6 +32,15 @@ const GetTerritoryFromLocationQuery = `
         wd:Q486972
     ))
 
+    ?settlement wdt:P17 ?country .
+    ?country wdt:P297 ?countryCode .
+
+    OPTIONAL {
+    ?article schema:about ?settlement ;
+             schema:isPartOf <https://en.wikipedia.org/> .
+    BIND(REPLACE(STR(?article), "https://en.wikipedia.org/wiki/", "") AS ?wikipediaTitle)
+  }
+
     SERVICE wikibase:label { bd:serviceParam wikibase:language "en". }
     BIND(STRAFTER(STR(?settlement), "/entity/") AS ?settlementCode)
     }}
@@ -39,7 +48,7 @@ const GetTerritoryFromLocationQuery = `
     LIMIT 1`
 
 const GetArticlesInTerritoryQuery = `
-    SELECT ?articleCode ?placeLabel ?coord ?lat ?lon ?article ?typeLabel WHERE {
+    SELECT ?articleCode ?placeLabel ?wikipediaTitle ?coord ?lat ?lon ?article ?typeLabel WHERE {
         ?place wdt:P131 wd:{location_QID}.
         
         ?place wdt:P625 ?coord.
@@ -57,11 +66,12 @@ const GetArticlesInTerritoryQuery = `
         BIND(STRAFTER(STR(?place), "/entity/") AS ?articleCode)
         
         SERVICE wikibase:label { bd:serviceParam wikibase:language "en" . }
+        BIND(REPLACE(STR(?article), "https://en.wikipedia.org/wiki/", "") AS ?wikipediaTitle)
     }
 	ORDER BY ?placeLabel`
 
 
-export async function GetUserTerritory(coords: LatLng): Promise<string | null> {
+export async function GetUserArea(coords: LatLng): Promise<Area | null> {
     let parsedQuery = GetTerritoryFromLocationQuery
         .replace('{latitude}', coords.latitude.toString())
         .replace('{longitude}', coords.longitude.toString())
@@ -70,19 +80,40 @@ export async function GetUserTerritory(coords: LatLng): Promise<string | null> {
 
     const finalURL = `${WdqsEndpoint}?query=${parsedQuery}&format=json`
 
-
     const data = await axios.get(finalURL, { headers })
 
     if (data.status != 200)
         return null;
 
-    const territory = data.data['results']['bindings'][0]['settlementCode']['value']
-    return territory;
+    const areaCode = data.data['results']['bindings'][0]['settlementCode']['value']
+    const wikipediaTitle = data.data['results']['bindings'][0]['wikipediaTitle']['value']
+    const countryCode = data.data['results']['bindings'][0]['countryCode']['value']
+    const articleUrl = data.data['results']['bindings'][0]['article']['value']
+
+    // Get remaining Area data from a second api request
+    const wikipedaRequestURL = `https://en.wikipedia.org/api/rest_v1/page/summary/${wikipediaTitle}`;
+
+    const secondaryData = await axios.get(wikipedaRequestURL, { headers })
+
+    if (secondaryData.status != 200)
+        return null;
+
+    const thumbnailUrl = secondaryData.data['thumbnail']['source']
+    const displayName = secondaryData.data['titles']['normalized']
+
+
+    return {
+        id: areaCode,
+        name: displayName,
+        articleUrl: articleUrl,
+        thumbnailUrl: thumbnailUrl,
+        country: countryCode
+    };
 }
 
-export async function GetArticles(territory: string): Promise<Array<ArticlePoint> | null> {
+export async function GetArticles(area: Area): Promise<Array<Article> | null> {
     let parsedQuery = GetArticlesInTerritoryQuery
-        .replace('{location_QID}', territory)
+        .replace('{location_QID}', area.id)
 
     parsedQuery = encodeURI(parsedQuery);
 
@@ -93,31 +124,43 @@ export async function GetArticles(territory: string): Promise<Array<ArticlePoint
     if (data.status != 200)
         return null;
 
-    let ArticleCollection: Array<ArticlePoint> = [];
+    let ArticleCollection: Array<Article> = [];
 
-    data.data['results']['bindings'].forEach((element: { [x: string]: { [x: string]: any; }; }) => {
+    data.data['results']['bindings'].map(async (element: { [x: string]: { [x: string]: any; }; }) => {
         let articleId = element['articleCode']['value']
         let coords: LatLng = { latitude: parseFloat(element['lat']['value']) ?? 0, longitude: parseFloat(element['lon']['value']) ?? 0 }
         let url = element['article']['value']
         let displayName = element['placeLabel']['value']
+        const wikipediaTitle = element['wikipediaTitle']['value']
 
-        let currentPoint: ArticlePoint = {
+        const wikipedaRequestURL = `https://en.wikipedia.org/api/rest_v1/page/summary/${wikipediaTitle}`;
+        const secondaryData = await axios.get(wikipedaRequestURL, { headers })
+
+        if (secondaryData.status != 200)
+            return;
+
+        const thumbnailUrl = secondaryData.data?.thumbnail?.source;
+
+
+        let currentPoint: Article = {
+            id: articleId,
+            name: displayName,
+            articleUrl: url,
+            thumbnailUrl: thumbnailUrl,
+            parentId: area.id,
             coords: coords,
-            article: {
-                id: articleId,
-                url: url,
-                name: displayName
-            }
         };
+
 
         let foundId = false;
         ArticleCollection.map((existingArticle, index) => {
-            if (existingArticle.article.id == articleId)
+            if (existingArticle.id == articleId)
                 foundId = true;
         });
 
-        if (!foundId)
+        if (!foundId) {
             ArticleCollection.push(currentPoint);
+        }
 
     });
 
@@ -125,7 +168,7 @@ export async function GetArticles(territory: string): Promise<Array<ArticlePoint
 }
 
 export async function GetArticleText(article: Article) {
-    const article_url_ending = article.url.split('/').pop();
+    const article_url_ending = article.articleUrl.split('/').pop();
     const url = `https://en.wikipedia.org/w/api.php?format=json&action=query&prop=extracts&explaintext=true&titles=${article_url_ending}`
 
 

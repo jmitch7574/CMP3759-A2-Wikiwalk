@@ -40,7 +40,8 @@
         {
           "locationWhenInUsePermission": "Allow $(PRODUCT_NAME) to use your location."
         }
-      ]
+      ],
+      "expo-sqlite"
     ]
   }
 }

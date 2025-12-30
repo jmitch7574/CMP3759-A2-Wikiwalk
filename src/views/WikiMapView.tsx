@@ -1,27 +1,27 @@
 import { StyleSheet, TouchableOpacity, View, Text } from "react-native";
-import MapView, { LatLng, Marker, UserLocationChangeEvent } from 'react-native-maps';
-import React, { ReactNode, useRef, useState } from "react";
+import MapView, { LatLng, UserLocationChangeEvent } from 'react-native-maps';
+import React, { ReactNode, useContext, useRef, useState } from "react";
 import { MaterialCommunityIcons } from "@expo/vector-icons";
 
-import { GetArticles, GetUserTerritory } from "../wikidata/WikidataApi";
-import { Float } from "react-native/Libraries/Types/CodegenTypes";
+import { GetArticles, GetUserArea } from "../services/WikidataApi";
 import CustomMarker from "../components/CustomMarker";
 import ArticlePopup, { ArticlePopupContext } from "../components/ArticlePopup";
-import BottomSheet, { BottomSheetView } from "@gorhom/bottom-sheet";
-import { GestureHandlerRootView } from "react-native-gesture-handler";
 import { Haversine } from "../utils/MapHelper";
-import { ArticlePoint } from "../data/Location";
+import { Article } from "../data/Location";
+import { CollectionContext, CollectionProvider } from "../context/CollectionContext";
 
 export default function WikiMapView() {
 
     const [location, setLocation] = useState<LatLng | null>(null);
     const [focusedArticle, setFocusedArticle] = useState<ArticlePopupContext | null>(null);
 
-    const [currentPoints, setCurrentPoints] = useState<Array<ArticlePoint> | null>(null);
+    const [currentPoints, setCurrentPoints] = useState<Array<Article> | null>(null);
 
     const firstLocationPull = useRef(true);
 
     const map = useRef<MapView | null>(null);
+
+    const Collection = useContext(CollectionContext);
 
     const mapStyle = [
         {
@@ -42,7 +42,7 @@ export default function WikiMapView() {
 
         currentPoints?.map((element, index) => { // Access the index as a fallback key
             markers.push(
-                <CustomMarker onPress={(isClose: boolean) => setFocusedArticle({ articlePoint: element, isClose: isClose })} key={element.article.id} location={location} articleInfo={element}></CustomMarker>
+                <CustomMarker onPress={(isClose: boolean) => setFocusedArticle({ article: element, isClose: isClose })} key={element.id} location={location} articleInfo={element}></CustomMarker>
             );
         });
 
@@ -75,12 +75,18 @@ export default function WikiMapView() {
 
     async function UpdateArticles(newLocation: LatLng) {
         // Get Articles
-        const territory = await GetUserTerritory(newLocation);
+        const territory = await GetUserArea(newLocation);
 
         if (territory == null)
             return;
 
+        await Collection?.discoverArea(territory);
+
         setCurrentPoints(await GetArticles(territory));
+
+        currentPoints?.map(async (article: Article) => {
+            await Collection?.discoverArticle(article);
+        })
     }
 
     function CenterMap(map: MapView) {
@@ -112,7 +118,7 @@ export default function WikiMapView() {
                 </TouchableOpacity>
             </View>
 
-            {focusedArticle && <ArticlePopup articlePoint={focusedArticle.articlePoint} isClose={focusedArticle.isClose} onClose={() => setFocusedArticle(null)}></ArticlePopup>}
+            {focusedArticle && <ArticlePopup article={focusedArticle.article} isClose={focusedArticle.isClose} onClose={() => setFocusedArticle(null)}></ArticlePopup>}
 
         </View >
     );
