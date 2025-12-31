@@ -10,6 +10,7 @@ interface CollectionContextType {
     claimArticle: (article: Article) => Promise<void>;
     isArticleCollected: (id: string) => boolean;
     getArticlesForArea: (areaId: string) => Promise<Article[]>;
+    getFullAreaInfo: (areaId: string) => Promise<Area | null>;
     collectedIds: Set<string>
 }
 
@@ -35,10 +36,14 @@ export function CollectionProvider({ children }) {
             await initDatabase(database);
             console.log("DB Initialized")
             setDb(database);
-            await refreshCollectedIds();
         };
         setup();
     }, []);
+
+    useEffect(() => {
+        if (!db) return;
+        refreshCollectedIds();
+    }, [db]);
 
     const discoverArea = async (area: Area) => {
         try {
@@ -48,6 +53,11 @@ export function CollectionProvider({ children }) {
         catch (error) {
             console.error(error);
         }
+    }
+
+    const getFullAreaInfo = async (areaId: string) => {
+        if (!db) return null;
+        return await dbService.getArea(db, areaId);
     }
 
     const discoverArticle = async (article: Article) => {
@@ -72,7 +82,10 @@ export function CollectionProvider({ children }) {
         }
     };
 
-    const isArticleCollected = (id: string) => collectedIds.has(id);
+    const isArticleCollected = (id: string) => {
+        console.log(collectedIds, collectedIds.has(id));
+        return collectedIds.has(id);
+    }
 
     const getArticlesForArea = async (areaId: string) => {
         if (!db) return [];
@@ -86,6 +99,7 @@ export function CollectionProvider({ children }) {
             claimArticle,
             isArticleCollected,
             getArticlesForArea,
+            getFullAreaInfo,
             collectedIds
         }}>
             {children}

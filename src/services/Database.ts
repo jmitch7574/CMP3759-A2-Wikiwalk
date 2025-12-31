@@ -46,11 +46,21 @@ export const initDatabase = async (db: SQLite.SQLiteDatabase) => {
 export const dbService = {
     getAreas: async (db: SQLite.SQLiteDatabase): Promise<Area[]> => {
         return await db.getAllAsync<Area>(`
-            SELECT t.id, t.name, t.article_url as articleUrl, t.thumbnail_url as thumbnailUrl, t.country, t.discovered_at as discoveredAt, COUNT(a.id) as collectedCount
+            SELECT t.id, t.name, t.article_url as articleUrl, t.thumbnail_url as thumbnailUrl, t.country, t.discovered_at as discoveredAt, COUNT(a.id) as totalCount, COUNT(a.collected_at) as collectedCount
             FROM areas t
             LEFT JOIN articles a ON t.id = a.area_id
             GROUP BY t.id
         `);
+    },
+
+    getArea: async (db: SQLite.SQLiteDatabase, areaID: string): Promise<Area | null> => {
+        return await db.getFirstAsync<Area>(`
+            SELECT t.id, t.name, t.article_url as articleUrl, t.thumbnail_url as thumbnailUrl, t.country, t.discovered_at as discoveredAt, COUNT(a.id) as totalCount, COUNT(a.collected_at) as collectedCount
+            FROM areas t
+            LEFT JOIN articles a ON t.id = a.area_id
+            WHERE t.id = ?
+            GROUP BY t.id
+        `, [areaID]);
     },
 
     getArticles: async (db: SQLite.SQLiteDatabase): Promise<Article[]> => {

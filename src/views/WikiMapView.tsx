@@ -9,6 +9,7 @@ import ArticlePopup, { ArticlePopupContext } from "../components/ArticlePopup";
 import { Haversine } from "../utils/MapHelper";
 import { Article } from "../data/Location";
 import { CollectionContext, CollectionProvider } from "../context/CollectionContext";
+import { useNavigation } from "@react-navigation/native";
 
 export default function WikiMapView() {
 
@@ -22,6 +23,8 @@ export default function WikiMapView() {
     const map = useRef<MapView | null>(null);
 
     const Collection = useContext(CollectionContext);
+
+    const navigation = useNavigation();
 
     const mapStyle = [
         {
@@ -74,19 +77,31 @@ export default function WikiMapView() {
     }
 
     async function UpdateArticles(newLocation: LatLng) {
+        if (!Collection) return;
         // Get Articles
-        const territory = await GetUserArea(newLocation);
+        let territory = await GetUserArea(newLocation);
+
+
+        territory = await Collection.getFullAreaInfo(territory?.id ?? '');
 
         if (territory == null)
             return;
 
+        const territoryComplete = territory.collectedCount == territory.totalCount;
+        navigation.setOptions({
+            headerTitle: `${territory.name} - ${territory.collectedCount} / ${territory.totalCount} ${territoryComplete ? '👑' : ''}`,
+        });
+
         await Collection?.discoverArea(territory);
 
-        setCurrentPoints(await GetArticles(territory));
+        const articles = await GetArticles(territory);
 
-        currentPoints?.map(async (article: Article) => {
-            await Collection?.discoverArticle(article);
-        })
+        // Discover all articles before setting them in state
+        if (articles) {
+            await Promise.all(articles.map(article => Collection?.discoverArticle(article)));
+        }
+
+        setCurrentPoints(articles);
     }
 
     function CenterMap(map: MapView) {

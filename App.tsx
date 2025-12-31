@@ -19,7 +19,7 @@ export default function App() {
         <DebugProvider>
           <CollectionProvider>
             <NavigationContainer>
-              <Tabs.Navigator>
+              <Tabs.Navigator initialRouteName="Map">
                 <Tabs.Screen
                   name="Collection"
                   component={WikiMapView}
@@ -33,7 +33,6 @@ export default function App() {
                   name="Map"
                   component={WikiMapView}
                   options={{
-                    headerShown: false,
                     tabBarIcon: ({ color, size }) => (
                       <MaterialCommunityIcons name="map" color={color} size={size}></MaterialCommunityIcons>
                     )
