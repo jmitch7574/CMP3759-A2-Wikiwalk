@@ -4,7 +4,7 @@ import { dbService, initDatabase } from '../services/Database';
 import { Area, Article } from '../data/Location';
 import { useDrizzleStudio } from "expo-drizzle-studio-plugin";
 
-interface CollectionContextType {
+interface DatabaseContextType {
     discoverArea: (area: Area) => Promise<void>;
     discoverArticle: (article: Article) => Promise<void>;
     claimArticle: (article: Article) => Promise<void>;
@@ -14,9 +14,9 @@ interface CollectionContextType {
     collectedIds: Set<string>
 }
 
-export const CollectionContext = createContext<CollectionContextType | undefined>(undefined);
+export const DatabaseContext = createContext<DatabaseContextType | undefined>(undefined);
 
-export function CollectionProvider({ children }) {
+export function DatabaseProvider({ children }) {
     const [db, setDb] = useState<SQLite.SQLiteDatabase | null>(null);
     const [collectedIds, setCollectedIds] = useState<Set<string>>(new Set());
     useDrizzleStudio(db);
@@ -93,7 +93,7 @@ export function CollectionProvider({ children }) {
     };
 
     return (
-        <CollectionContext.Provider value={{
+        <DatabaseContext.Provider value={{
             discoverArea,
             discoverArticle,
             claimArticle,
@@ -103,12 +103,12 @@ export function CollectionProvider({ children }) {
             collectedIds
         }}>
             {children}
-        </CollectionContext.Provider>
+        </DatabaseContext.Provider>
     );
 };
 
-export const useCollection = () => {
-    const context = useContext(CollectionContext);
-    if (!context) throw new Error('useCollection must be used within a CollectionProvider');
+export const useDatabase = () => {
+    const context = useContext(DatabaseContext);
+    if (!context) throw new Error('useDatabase must be used within a DatabaseProvider');
     return context;
 };

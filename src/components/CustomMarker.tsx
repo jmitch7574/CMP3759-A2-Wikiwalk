@@ -3,7 +3,7 @@ import { useContext, useMemo } from "react";
 import { Haversine } from "../utils/MapHelper";
 import { DebugContext } from "../context/DebugContext";
 import { Article } from "../data/Location";
-import { CollectionContext } from "../context/CollectionContext";
+import { DatabaseContext } from "../context/DatabaseContext";
 
 const ICONS = {
     available: require('../../assets/map-icons/poi_available.png'),
@@ -19,13 +19,13 @@ export type MarkerProps = {
 
 export default function CustomMarker({ articleInfo, location, onPress }: MarkerProps) {
     const debugMode = useContext(DebugContext);
-    const Collection = useContext(CollectionContext);
+    const Database = useContext(DatabaseContext);
 
     const ArticleRange = 0.1; // 100 meters
 
     const isCollected = useMemo(
-        () => Collection?.isArticleCollected(articleInfo.id) ?? false,
-        [Collection?.collectedIds, articleInfo.id]
+        () => Database?.isArticleCollected(articleInfo.id) ?? false,
+        [Database?.collectedIds, articleInfo.id]
     );
 
     const isClose = Haversine(articleInfo.coords, location) <= ArticleRange || debugMode;

@@ -8,7 +8,7 @@ import CustomMarker from "../components/CustomMarker";
 import ArticlePopup, { ArticlePopupContext } from "../components/ArticlePopup";
 import { Haversine } from "../utils/MapHelper";
 import { Article } from "../data/Location";
-import { CollectionContext, CollectionProvider } from "../context/CollectionContext";
+import { DatabaseContext, DatabaseProvider } from "../context/DatabaseContext";
 import { useNavigation } from "@react-navigation/native";
 
 export default function WikiMapView() {
@@ -22,7 +22,7 @@ export default function WikiMapView() {
 
     const map = useRef<MapView | null>(null);
 
-    const Collection = useContext(CollectionContext);
+    const Database = useContext(DatabaseContext);
 
     const navigation = useNavigation();
 
@@ -77,12 +77,12 @@ export default function WikiMapView() {
     }
 
     async function UpdateArticles(newLocation: LatLng) {
-        if (!Collection) return;
+        if (!Database) return;
         // Get Articles
         let territory = await GetUserArea(newLocation);
 
 
-        territory = await Collection.getFullAreaInfo(territory?.id ?? '');
+        territory = await Database.getFullAreaInfo(territory?.id ?? '');
 
         if (territory == null)
             return;
@@ -92,13 +92,13 @@ export default function WikiMapView() {
             headerTitle: `${territory.name} - ${territory.collectedCount} / ${territory.totalCount} ${territoryComplete ? '👑' : ''}`,
         });
 
-        await Collection?.discoverArea(territory);
+        await Database?.discoverArea(territory);
 
         const articles = await GetArticles(territory);
 
         // Discover all articles before setting them in state
         if (articles) {
-            await Promise.all(articles.map(article => Collection?.discoverArticle(article)));
+            await Promise.all(articles.map(article => Database?.discoverArticle(article)));
         }
 
         setCurrentPoints(articles);

@@ -4,7 +4,7 @@ import { StyleSheet, Text, useWindowDimensions, Image } from "react-native";
 import BottomSheet, { BottomSheetScrollView } from "@gorhom/bottom-sheet";
 import RenderHTML from 'react-native-render-html';
 import { Article } from "../data/Location";
-import { CollectionContext } from "../context/CollectionContext";
+import { DatabaseContext } from "../context/DatabaseContext";
 import WikipediaImage from "./WikipediaImage";
 
 export type ArticlePopupContext = {
@@ -24,7 +24,7 @@ export default function ArticlePopup(props: ArticlePopupProps) {
 
     let wiky = require('wiky.js');
 
-    const Collection = useContext(CollectionContext);
+    const Database = useContext(DatabaseContext);
     const { width } = useWindowDimensions();
 
     useEffect(() => {
@@ -33,7 +33,7 @@ export default function ArticlePopup(props: ArticlePopupProps) {
         }
 
         async function SetArticleAsCollected() {
-            await Collection?.claimArticle(props.article);
+            await Database?.claimArticle(props.article);
         }
 
         GetArticle();

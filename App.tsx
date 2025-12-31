@@ -8,7 +8,7 @@ import { GestureDetector, GestureHandlerRootView } from 'react-native-gesture-ha
 import BottomSheet, { BottomSheetView } from '@gorhom/bottom-sheet';
 import { DebugProvider } from './src/context/DebugContext';
 import Toast from 'react-native-toast-message';
-import { CollectionProvider } from './src/context/CollectionContext';
+import { DatabaseProvider } from './src/context/DatabaseContext';
 
 const Tabs = createBottomTabNavigator();
 
@@ -17,7 +17,7 @@ export default function App() {
     <View style={{ flex: 1 }}>
       <GestureHandlerRootView>
         <DebugProvider>
-          <CollectionProvider>
+          <DatabaseProvider>
             <NavigationContainer>
               <Tabs.Navigator initialRouteName="Map">
                 <Tabs.Screen
@@ -50,7 +50,7 @@ export default function App() {
               </Tabs.Navigator>
             </NavigationContainer>
             <Toast bottomOffset={100} />
-          </CollectionProvider>
+          </DatabaseProvider>
         </DebugProvider>
       </GestureHandlerRootView>
     </View>
