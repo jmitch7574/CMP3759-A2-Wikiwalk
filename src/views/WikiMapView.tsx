@@ -133,7 +133,7 @@ export default function WikiMapView() {
                 </TouchableOpacity>
             </View>
 
-            {focusedArticle && <ArticlePopup article={focusedArticle.article} isClose={focusedArticle.isClose} onClose={() => setFocusedArticle(null)}></ArticlePopup>}
+            {focusedArticle && <ArticlePopup article={focusedArticle.article} isClose={focusedArticle.isClose} onClose={() => setFocusedArticle(null)} fallbackText="Please move closer to discover this location"></ArticlePopup>}
 
         </View >
     );

@@ -9,6 +9,7 @@ import BottomSheet, { BottomSheetView } from '@gorhom/bottom-sheet';
 import { DebugProvider } from './src/context/DebugContext';
 import Toast from 'react-native-toast-message';
 import { DatabaseProvider } from './src/context/DatabaseContext';
+import CollectionView from './src/views/Collection';
 
 const Tabs = createBottomTabNavigator();
 
@@ -22,7 +23,7 @@ export default function App() {
               <Tabs.Navigator initialRouteName="Map">
                 <Tabs.Screen
                   name="Collection"
-                  component={WikiMapView}
+                  component={CollectionView}
                   options={{
                     tabBarIcon: ({ color, size }) => (
                       <MaterialCommunityIcons name="book" color={color} size={size}></MaterialCommunityIcons>

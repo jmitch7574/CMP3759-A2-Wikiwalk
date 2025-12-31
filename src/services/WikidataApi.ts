@@ -49,7 +49,7 @@ const GetTerritoryFromLocationQuery = `
 
 const GetArticlesInTerritoryQuery = `
     SELECT ?articleCode ?placeLabel ?wikipediaTitle ?coord ?lat ?lon ?article ?typeLabel WHERE {
-        ?place wdt:P131 wd:{location_QID}.
+        ?place (wdt:P131|wdt:P276) wd:{location_QID}.
         
         ?place wdt:P625 ?coord.
 

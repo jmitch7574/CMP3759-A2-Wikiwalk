@@ -9,13 +9,14 @@ import WikipediaImage from "./WikipediaImage";
 
 export type ArticlePopupContext = {
     article: Article,
-    isClose: boolean,
+    isClose: boolean
 }
 
 type ArticlePopupProps = {
     article: Article,
     isClose: boolean,
-    onClose?: () => void;
+    onClose?: () => void,
+    fallbackText: string
 }
 
 
@@ -52,7 +53,7 @@ export default function ArticlePopup(props: ArticlePopupProps) {
             <BottomSheetScrollView style={styles.articleContainer} contentContainerStyle={styles.articleContentContainer}>
                 <Text style={styles.title}>{props.article.name}</Text>
 
-                {props.article.thumbnailUrl && <WikipediaImage url={props.article.thumbnailUrl} width={150} height={150} isCollected={props.isClose}></WikipediaImage>}
+                {props.article.thumbnailUrl && <WikipediaImage style={{ marginBottom: 20 }} url={props.article.thumbnailUrl} width={150} height={150} isCollected={props.isClose}></WikipediaImage>}
 
                 {props.isClose && (<RenderHTML
                     contentWidth={width}
@@ -60,7 +61,7 @@ export default function ArticlePopup(props: ArticlePopupProps) {
                     tagsStyles={tagsStyles}
                 />)}
 
-                {!props.isClose && (<Text> Please get closer to discover</Text>)}
+                {!props.isClose && (<Text>{props.fallbackText}</Text>)}
             </BottomSheetScrollView>
         </BottomSheet>
     )
@@ -78,13 +79,6 @@ const styles = StyleSheet.create({
         fontSize: 38,
         paddingBottom: 24,
         textAlign: 'center'
-    },
-    image: {
-        width: 150,
-        height: 150,
-        aspectRatio: 1,
-        marginBottom: 30,
-        borderRadius: 1000
     }
 })
 

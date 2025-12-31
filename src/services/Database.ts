@@ -84,7 +84,7 @@ export const dbService = {
 
     getArticlesByArea: async (db: SQLite.SQLiteDatabase, areaId: string): Promise<Article[]> => {
         const rows = await db.getAllAsync<ArticleRecordRaw>(`
-            SELECT id, name, article_url as articleUrl, area_id as parentId, latitude, longitude, collected_at as collectedAt
+            SELECT id, name, article_url as articleUrl, thumbnail_url as thumbnailUrl, area_id as parentId, latitude, longitude, collected_at as collectedAt
             FROM articles
             WHERE area_id = ?
         `, [areaId]);

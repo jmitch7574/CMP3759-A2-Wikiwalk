@@ -10,6 +10,7 @@ interface DatabaseContextType {
     claimArticle: (article: Article) => Promise<void>;
     isArticleCollected: (id: string) => boolean;
     getArticlesForArea: (areaId: string) => Promise<Article[]>;
+    getAreas: () => Promise<Area[]>;
     getFullAreaInfo: (areaId: string) => Promise<Area | null>;
     collectedIds: Set<string>
 }
@@ -92,6 +93,11 @@ export function DatabaseProvider({ children }) {
         return await dbService.getArticlesByArea(db, areaId);
     };
 
+    const getAreas = async () => {
+        if (!db) return [];
+        return await dbService.getAreas(db);
+    }
+
     return (
         <DatabaseContext.Provider value={{
             discoverArea,
@@ -100,6 +106,7 @@ export function DatabaseProvider({ children }) {
             isArticleCollected,
             getArticlesForArea,
             getFullAreaInfo,
+            getAreas,
             collectedIds
         }}>
             {children}

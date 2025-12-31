@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from "react";
-import { StyleSheet, Image, View } from "react-native";
+import { StyleSheet, Image, View, StyleProp, ViewStyle } from "react-native";
 import { Buffer } from 'buffer';
 import axios from "axios";
 import { FilterImage } from 'react-native-svg/filter-image';
@@ -8,7 +8,8 @@ type WikipediaImageProps = {
     url: string,
     width: number,
     height: number,
-    isCollected: boolean
+    isCollected: boolean,
+    style?: StyleProp<ViewStyle>
 }
 
 
@@ -46,7 +47,7 @@ export default function WikipediaImage(props: WikipediaImageProps) {
     }, []);
 
     return (
-        <View>
+        <View style={[props.style, { alignContent: 'center', justifyContent: 'center', alignItems: 'center' }]}>
             {
                 base64Image ? (
                     <FilterImage
@@ -69,9 +70,9 @@ export default function WikipediaImage(props: WikipediaImageProps) {
 const styles = StyleSheet.create({
     image: {
         aspectRatio: 1,
-        marginBottom: 30,
         borderRadius: 1000,
         borderColor: 'black',
-        borderWidth: 5
+        borderWidth: 4,
+        margin: 0
     }
 })
