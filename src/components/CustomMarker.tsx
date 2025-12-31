@@ -1,5 +1,5 @@
 import { LatLng, Marker } from "react-native-maps";
-import { useContext } from "react";
+import { useContext, useMemo } from "react";
 import { Haversine } from "../utils/MapHelper";
 import { DebugContext } from "../context/DebugContext";
 import { Article } from "../data/Location";
@@ -23,7 +23,11 @@ export default function CustomMarker({ articleInfo, location, onPress }: MarkerP
 
     const ArticleRange = 0.1; // 100 meters
 
-    const isCollected = Collection?.isArticleCollected(articleInfo.id);
+    const isCollected = useMemo(
+        () => Collection?.isArticleCollected(articleInfo.id) ?? false,
+        [Collection?.collectedIds, articleInfo.id]
+    );
+
     const isClose = Haversine(articleInfo.coords, location) <= ArticleRange || debugMode;
 
     let currentIcon = ICONS.unavailable;

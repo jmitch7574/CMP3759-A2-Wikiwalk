@@ -8,6 +8,7 @@ export type Area = {
     country: string
     discoveredAt: Date | null
     collectedCount: number | null
+    totalCount: number | null
 }
 
 export type Article = {

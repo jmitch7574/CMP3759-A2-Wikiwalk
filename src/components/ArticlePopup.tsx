@@ -37,7 +37,7 @@ export default function ArticlePopup(props: ArticlePopupProps) {
         }
 
         GetArticle();
-        SetArticleAsCollected()
+        if (props.isClose) SetArticleAsCollected()
     }, [])
 
     const popupHeightChanged = (index: number) => {
