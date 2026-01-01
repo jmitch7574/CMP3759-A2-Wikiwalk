@@ -19,7 +19,8 @@ export type Article = {
     thumbnailUrl: string | null
     parentId: string
     coords: LatLng
-    collectedAt: Date | null
+    collectedAt: Date | null,
+    owner: string | null
 }
 
 
@@ -31,5 +32,6 @@ export type ArticleRecordRaw = {
     parentId: string
     latitude: number
     longitude: number
-    collectedAt: Date | null
+    collectedAt: Date | null,
+    owner: string | null
 }

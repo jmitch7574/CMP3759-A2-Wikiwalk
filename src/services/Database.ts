@@ -33,6 +33,7 @@ export const initDatabase = async (db: SQLite.SQLiteDatabase) => {
             latitude REAL NOT NULL,
             longitude REAL NOT NULL,
             collected_at DATETIME,
+            owner TEXT
 
             FOREIGN KEY (area_id) REFERENCES areas (id)
         );
@@ -73,7 +74,7 @@ export const dbService = {
 
     getArticles: async (db: SQLite.SQLiteDatabase): Promise<Article[]> => {
         const rows = await db.getAllAsync<ArticleRecordRaw>(`
-            SELECT id, name, article_url as articleUrl, thumbnail_url as thumbnailUrl, area_id as parentId, latitude, longitude, collected_at as collectedAt
+            SELECT id, name, article_url as articleUrl, owner, thumbnail_url as thumbnailUrl, area_id as parentId, latitude, longitude, collected_at as collectedAt
             FROM articles
         `);
 
@@ -82,7 +83,7 @@ export const dbService = {
 
     getArticlesCollected: async (db: SQLite.SQLiteDatabase): Promise<Article[]> => {
         const rows = await db.getAllAsync<ArticleRecordRaw>(`
-            SELECT id, name, article_url as articleUrl, thumbnail_url as thumbnailUrl, area_id as parentId, latitude, longitude, collected_at as collectedAt
+            SELECT id, name, article_url as articleUrl, owner, thumbnail_url as thumbnailUrl, area_id as parentId, latitude, longitude, collected_at as collectedAt
             FROM articles
             WHERE collected_at IS NOT NULL
         `);
@@ -92,7 +93,7 @@ export const dbService = {
 
     getArticlesByArea: async (db: SQLite.SQLiteDatabase, areaId: string): Promise<Article[]> => {
         const rows = await db.getAllAsync<ArticleRecordRaw>(`
-            SELECT id, name, article_url as articleUrl, thumbnail_url as thumbnailUrl, area_id as parentId, latitude, longitude, collected_at as collectedAt
+            SELECT id, name, article_url as articleUrl, owner, thumbnail_url as thumbnailUrl, area_id as parentId, latitude, longitude, collected_at as collectedAt
             FROM articles
             WHERE area_id = ?
         `, [areaId]);
@@ -111,8 +112,8 @@ export const dbService = {
 
         await db.withTransactionAsync(async () => {
             for (const article of articles) {
-                await db.runAsync('INSERT OR IGNORE INTO articles (id, name, article_url, thumbnail_url, area_id, latitude, longitude) VALUES(?, ?, ?, ?, ?, ?, ?)',
-                    [article.id, article.name, article.articleUrl, article.thumbnailUrl, article.parentId, article.coords.latitude, article.coords.longitude]
+                await db.runAsync('INSERT OR IGNORE INTO articles (id, name, article_url, thumbnail_url, area_id, latitude, longitude, owner) VALUES(?, ?, ?, ?, ?, ?, ?)',
+                    [article.id, article.name, article.articleUrl, article.thumbnailUrl, article.parentId, article.coords.latitude, article.coords.longitude, article.owner]
                 )
             }
         });
@@ -245,6 +246,7 @@ function mapRawRecordsToRegular(rawRecords: ArticleRecordRaw[]): Article[] {
             latitude: row.latitude,
             longitude: row.longitude
         },
-        collectedAt: row.collectedAt ? new Date(row.collectedAt) : null
+        collectedAt: row.collectedAt ? new Date(row.collectedAt) : null,
+        owner: row.owner
     }))
 }

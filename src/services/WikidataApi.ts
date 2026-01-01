@@ -53,17 +53,18 @@ const GetTerritoryFromLocationQuery = `
     LIMIT 1`
 
 const GetArticlesInTerritoryQuery = `
-    SELECT ?articleCode ?placeLabel ?wikipediaTitle ?coord ?lat ?lon ?article ?typeLabel WHERE {
+    SELECT ?articleCode ?placeLabel ?owner ?wikipediaTitle ?coord ?lat ?lon ?article ?typeLabel WHERE {
         ?place (wdt:P131|wdt:P276) wd:{location_QID}.
         
         ?place wdt:P625 ?coord.
 
         ?article schema:about ?place.
         ?article schema:isPartOf <https://en.wikipedia.org/>.
-                
+        
         
         OPTIONAL {
             ?place wdt:P31 ?type.
+            ?place wdt:p127 ?owner.
         }
 
         BIND(geof:latitude(?coord) AS ?lat)
@@ -148,12 +149,13 @@ export async function GetArticles(area: Area): Promise<Article[] | null> {
         let url = element['article']['value']
         let displayName = element['placeLabel']['value']
         const wikipediaTitle = element['wikipediaTitle']['value']
+        const owner = data.data['results']['bindings'][0]['owner']['value'] ?? null
 
         const wikipedaRequestURL = `https://en.wikipedia.org/api/rest_v1/page/summary/${wikipediaTitle}`;
         const secondaryData = await axios.get(wikipedaRequestURL, { headers })
 
         if (secondaryData.status != 200)
-            return;
+            continue;
 
         const thumbnailUrl = secondaryData.data?.thumbnail?.source;
 
@@ -165,7 +167,8 @@ export async function GetArticles(area: Area): Promise<Article[] | null> {
             thumbnailUrl: thumbnailUrl,
             parentId: area.id,
             coords: coords,
-            collectedAt: null
+            collectedAt: null,
+            owner: owner
         };
 
 
