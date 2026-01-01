@@ -93,6 +93,9 @@ export default function WikiMapView() {
     }
 
     async function UpdateArticles(newLocation: LatLng) {
+
+        newLocation = { latitude: 53.22, longitude: -0.53 }
+
         if (!Database) return;
         // Get Articles
         let territory = await GetUserArea(newLocation);

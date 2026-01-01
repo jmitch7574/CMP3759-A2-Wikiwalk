@@ -4,6 +4,7 @@ import { Area, Article } from "../data/Location";
 import { StyleSheet, View, Text, Falsy, RecursiveArray, RegisteredStyle, ViewStyle, StyleProp, TouchableOpacity } from "react-native";
 import WikipediaImage from "./WikipediaImage";
 import { focusArticleContext } from "../views/Collection";
+import { truncate } from "../utils/StringUtils";
 
 
 export type CollectionArticleProps = {
@@ -33,7 +34,7 @@ export default function CollectionArticle(props: CollectionArticleProps) {
             {
                 !article.thumbnailUrl && (
                     <View style={styles.fallbackCirle}>
-                        <Text style={styles.fallbackText}>{article.name}</Text>
+                        <Text style={styles.fallbackText}>{truncate(article.name, 32)}</Text>
                     </View>
                 )
             }
@@ -67,5 +68,6 @@ const styles = StyleSheet.create({
         fontSize: 12,
         flexWrap: 'wrap',
         textAlign: 'center',
+        width: 75
     }
 })

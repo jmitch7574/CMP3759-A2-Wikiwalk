@@ -39,7 +39,7 @@ export function DatabaseProvider({ children }) {
     useEffect(() => {
         const setup = async () => {
             console.log('Setting up DB');
-            const database = await SQLite.openDatabaseAsync('test12.db');
+            const database = await SQLite.openDatabaseAsync('test16.db');
             console.log("DB Opened")
             await initDatabase(database);
             console.log("DB Initialized")
@@ -114,6 +114,7 @@ export function DatabaseProvider({ children }) {
         await dbService.updateTrophyCategoryCompleteAreas(db);
         await dbService.updateTrophyCategoryDiscoverAreas(db);
         await dbService.updateTrophyCategorySpecial(db);
+        await dbService.updateTrophyCategorWetherspoons(db);
 
         const justUnlockedTrophies = await dbService.checkTrophyCompletion(db);
 

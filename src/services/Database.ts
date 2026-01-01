@@ -214,9 +214,13 @@ export const dbService = {
 
     updateTrophyCategorWetherspoons: async (db: SQLite.SQLiteDatabase) => {
         const countQuery = `
-            SELECT COUNT(collected_at) 
-            FROM areas a
-            WHERE owner = Q6109362`;
+        SELECT COUNT(collected_at) as total 
+        FROM articles 
+        WHERE owner = "http://www.wikidata.org/entity/Q6109362"
+        `;
+
+        const result = await db.getFirstAsync<{ total: number }>(countQuery);
+        const count = result?.total ?? 0;
 
         const matchingTrophies = TROPHIES.filter(t => t.requirement_type === 'wetherspoons');
 
@@ -224,11 +228,12 @@ export const dbService = {
             for (const trophy of matchingTrophies) {
                 await db.runAsync(`
                     INSERT INTO user_trophies (id, value) 
-                    VALUES (?, (${countQuery})) 
-                    ON CONFLICT(id) DO UPDATE SET value = (${countQuery})`,
-                    [trophy.id]
+                    VALUES (?, (?)) 
+                    ON CONFLICT(id) DO UPDATE SET value = excluded.value`,
+                    [trophy.id, count]
                 );
             }
+
         });
     },
 
@@ -250,7 +255,12 @@ export const dbService = {
     },
 
     getTrophyProgress: async (db: SQLite.SQLiteDatabase): Promise<TrophyTracker[]> => {
-        return await db.getAllAsync<TrophyTracker>(`SELECT id, value, completed_at as completedAt FROM user_trophies`);
+        const result = await db.getAllAsync<TrophyTracker>(`SELECT id, value, completed_at as completedAt FROM user_trophies`);
+
+        return result.map(item => ({
+            ...item,
+            completedAt: item.completedAt ? new Date(item.completedAt) : null
+        }));
     }
 
 }

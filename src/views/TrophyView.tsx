@@ -5,6 +5,7 @@ import { FlatList } from "react-native-gesture-handler";
 import ArticlePopup, { ArticlePopupContext } from "../components/ArticlePopup";
 import { TROPHIES, Trophy } from "../data/Trophies";
 import TrophyCategoryCarousel from "../components/TrophyCategory";
+import TrophyPopup from "../components/TrophyPopup";
 
 export const focusTrophyContext = createContext<((context: Trophy) => void) | undefined>(undefined); 44
 
@@ -37,6 +38,8 @@ export default function TrophyView() {
                     renderItem={(trophies) => <TrophyCategoryCarousel trophyCategory={trophies.item} />}
                     keyExtractor={(item) => item.categoryName}>
                 </FlatList>
+
+                {focusedTrophy && <TrophyPopup trophy={focusedTrophy} onClose={() => setFocusedTrophy(null)}></TrophyPopup>}
             </View>
         </focusTrophyContext.Provider>
     );
