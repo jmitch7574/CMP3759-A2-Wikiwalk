@@ -3,16 +3,21 @@ import * as SQLite from 'expo-sqlite';
 import { dbService, initDatabase } from '../services/Database';
 import { Area, Article } from '../data/Location';
 import { useDrizzleStudio } from "expo-drizzle-studio-plugin";
+import { TrophyTracker } from '../data/Trophies';
+import Toast from 'react-native-toast-message';
 
 interface DatabaseContextType {
     discoverArea: (area: Area) => Promise<void>;
-    discoverArticle: (article: Article) => Promise<void>;
+    discoverArticles: (articles: Article[]) => Promise<void>;
     claimArticle: (article: Article) => Promise<void>;
     isArticleCollected: (id: string) => boolean;
     getArticlesForArea: (areaId: string) => Promise<Article[]>;
     getAreas: () => Promise<Area[]>;
     getFullAreaInfo: (areaId: string) => Promise<Area | null>;
-    collectedIds: Set<string>
+    updateTrophies: () => Promise<void>;
+    getTrophyProgress: (trophyId: string) => TrophyTracker | null;
+    collectedIds: Set<string>;
+    trophyProgress: Map<string, TrophyTracker>;
 }
 
 export const DatabaseContext = createContext<DatabaseContextType | undefined>(undefined);
@@ -20,6 +25,8 @@ export const DatabaseContext = createContext<DatabaseContextType | undefined>(un
 export function DatabaseProvider({ children }) {
     const [db, setDb] = useState<SQLite.SQLiteDatabase | null>(null);
     const [collectedIds, setCollectedIds] = useState<Set<string>>(new Set());
+    const [trophyProgress, setTrophyProgress] = useState<Map<string, TrophyTracker>>(new Map());
+
     useDrizzleStudio(db);
 
     const refreshCollectedIds = async () => {
@@ -32,7 +39,7 @@ export function DatabaseProvider({ children }) {
     useEffect(() => {
         const setup = async () => {
             console.log('Setting up DB');
-            const database = await SQLite.openDatabaseAsync('test2.db');
+            const database = await SQLite.openDatabaseAsync('test5.db');
             console.log("DB Opened")
             await initDatabase(database);
             console.log("DB Initialized")
@@ -44,6 +51,7 @@ export function DatabaseProvider({ children }) {
     useEffect(() => {
         if (!db) return;
         refreshCollectedIds();
+        updateTrophies();
     }, [db]);
 
     const discoverArea = async (area: Area) => {
@@ -54,6 +62,7 @@ export function DatabaseProvider({ children }) {
         catch (error) {
             console.error(error);
         }
+        await updateTrophies();
     }
 
     const getFullAreaInfo = async (areaId: string) => {
@@ -61,15 +70,16 @@ export function DatabaseProvider({ children }) {
         return await dbService.getArea(db, areaId);
     }
 
-    const discoverArticle = async (article: Article) => {
+    const discoverArticles = async (articles: Article[]) => {
         try {
             if (!db) return;
-            await dbService.tryDiscoverArticle(db, article);
+            await dbService.tryDiscoverArticles(db, articles);
             await refreshCollectedIds();
         }
         catch (error) {
             console.error(error);
         }
+        await updateTrophies();
     };
 
     const claimArticle = async (article: Article) => {
@@ -81,10 +91,10 @@ export function DatabaseProvider({ children }) {
         catch (error) {
             console.error(error);
         }
+        await updateTrophies();
     };
 
     const isArticleCollected = (id: string) => {
-        console.log(collectedIds, collectedIds.has(id));
         return collectedIds.has(id);
     }
 
@@ -98,16 +108,64 @@ export function DatabaseProvider({ children }) {
         return await dbService.getAreas(db);
     }
 
+    const updateTrophies = async () => {
+        if (!db) return;
+        await dbService.updateTrophyCategoryCollectArticles(db);
+        await dbService.updateTrophyCategoryCompleteAreas(db);
+        await dbService.updateTrophyCategoryDiscoverAreas(db);
+        await dbService.updateTrophyCategorySpecial(db);
+
+        const justUnlockedTrophies = await dbService.checkTrophyCompletion(db);
+
+        if (justUnlockedTrophies.length > 0) {
+            const showExtendedTooltip = justUnlockedTrophies.length > 1;
+
+            Toast.show({
+                type: 'info',
+                text1: `Trophy Unlocked`,
+                text2: `${justUnlockedTrophies[0].title} ${showExtendedTooltip ? `and ${justUnlockedTrophies.length - 1} others...` : ''}`,
+                position: 'bottom',
+                visibilityTime: 8000
+            })
+
+
+        }
+
+        if (justUnlockedTrophies.length == 1) {
+        }
+
+        if (justUnlockedTrophies.length > 1) {
+            Toast.show({
+                type: 'info',
+                text1: 'New Trophies unlocked',
+                text2: `${justUnlockedTrophies[0].title} and ${justUnlockedTrophies.length - 1} others...`,
+                position: 'bottom',
+                visibilityTime: 8000
+            })
+        }
+
+        // Convert trophy progress array to hashmap for quick lookups later
+        const trophyProgressArray = await dbService.getTrophyProgress(db);
+        setTrophyProgress(new Map(trophyProgressArray.map(i => [i.id, i])));
+    }
+
+    const getTrophyProgress = (trophyId: string) => trophyProgress.get(trophyId) ?? null;
+
+
+
     return (
         <DatabaseContext.Provider value={{
             discoverArea,
-            discoverArticle,
+            discoverArticles,
             claimArticle,
             isArticleCollected,
             getArticlesForArea,
             getFullAreaInfo,
             getAreas,
-            collectedIds
+            updateTrophies,
+            getTrophyProgress,
+            collectedIds,
+            trophyProgress
         }}>
             {children}
         </DatabaseContext.Provider>

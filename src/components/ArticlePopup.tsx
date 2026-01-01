@@ -53,7 +53,8 @@ export default function ArticlePopup(props: ArticlePopupProps) {
             <BottomSheetScrollView style={styles.articleContainer} contentContainerStyle={styles.articleContentContainer}>
                 <Text style={styles.title}>{props.article.name}</Text>
 
-                {props.article.thumbnailUrl && <WikipediaImage style={{ marginBottom: 20 }} url={props.article.thumbnailUrl} width={150} height={150} isCollected={props.isClose}></WikipediaImage>}
+                {props.article.thumbnailUrl && <WikipediaImage style={{ margin: 10 }} url={props.article.thumbnailUrl} width={150} height={150} isCollected={props.isClose}></WikipediaImage>}
+                {props.article.collectedAt && <Text style={styles.dateCollected}>Collected {props.article.collectedAt.toLocaleDateString()}</Text>}
 
                 {props.isClose && (<RenderHTML
                     contentWidth={width}
@@ -69,10 +70,16 @@ export default function ArticlePopup(props: ArticlePopupProps) {
 
 const styles = StyleSheet.create({
     articleContainer: {
-        padding: 24
+        padding: 24,
+        flex: 1,
     },
     articleContentContainer: {
         alignItems: 'center',
+    },
+    dateCollected: {
+        color: 'gold',
+        fontStyle: 'italic',
+        margin: 10
     },
     title: {
         fontWeight: 'bold',

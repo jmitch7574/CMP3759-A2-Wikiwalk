@@ -2,9 +2,9 @@ import { StyleSheet, View } from "react-native";
 import React, { createContext, useCallback, useContext, useEffect, useState } from "react";
 import { DatabaseContext } from "../context/DatabaseContext";
 import { Area, Article } from "../data/Location";
-import CollectionAreaCarousel from "../components/CollectionAreaCarousel";
 import { FlatList } from "react-native-gesture-handler";
 import ArticlePopup, { ArticlePopupContext } from "../components/ArticlePopup";
+import CollectionAreaCarousel from "../components/CollectionAreaCarousel";
 
 export const focusArticleContext = createContext<((context: ArticlePopupContext) => void) | undefined>(undefined); 44
 
@@ -27,7 +27,7 @@ export default function CollectionView() {
 
     return (
         <focusArticleContext.Provider value={(context: ArticlePopupContext) => setFocusedArticle(context)}>
-            <View style={{ flex: 1, padding: 5 }}>
+            <View style={styles.container}>
                 {areas && (
                     <FlatList
                         data={areas}
@@ -44,4 +44,9 @@ export default function CollectionView() {
 }
 
 const styles = StyleSheet.create({
+    container: {
+        flex: 1,
+        paddingTop: 5,
+        paddingLeft: 5
+    }
 })

@@ -44,7 +44,7 @@ export default function WikipediaImage(props: WikipediaImageProps) {
         };
 
         fetchImage();
-    }, []);
+    }, [props.url]);
 
     return (
         <View style={[props.style, { alignContent: 'center', justifyContent: 'center', alignItems: 'center' }]}>

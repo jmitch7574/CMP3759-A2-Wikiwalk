@@ -16,8 +16,6 @@ export default function CollectionArticle(props: CollectionArticleProps) {
     const onPress = useContext(focusArticleContext)!
     const { article } = props
 
-    console.log(article);
-
     const isCollected = useMemo(
         () => Database?.isArticleCollected(article.id) ?? false,
         [Database?.collectedIds, article.id]

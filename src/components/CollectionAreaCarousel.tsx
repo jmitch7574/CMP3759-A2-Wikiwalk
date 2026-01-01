@@ -27,7 +27,7 @@ export default function CollectionAreaCarousel(props: CollectionAreaCarouselProp
 
     return (
         <View>
-            {articles && articles.length > 0 && (<Text style={styles.title}>{props.area.name}</Text>)}
+            {articles && articles.length > 0 && (<Text style={styles.title}>{props.area.name} - {props.area.collectedCount} / {props.area.totalCount} {props.area.collectedCount == props.area.totalCount ? '👑' : ''}</Text>)}
 
             {articles && articles.length > 0 && (
                 <FlatList

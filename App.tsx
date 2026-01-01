@@ -10,6 +10,7 @@ import { DebugProvider } from './src/context/DebugContext';
 import Toast from 'react-native-toast-message';
 import { DatabaseProvider } from './src/context/DatabaseContext';
 import CollectionView from './src/views/Collection';
+import TrophyView from './src/views/TrophyView';
 
 const Tabs = createBottomTabNavigator();
 
@@ -41,7 +42,7 @@ export default function App() {
                 />
                 <Tabs.Screen
                   name="Milestones"
-                  component={WikiMapView}
+                  component={TrophyView}
                   options={{
                     tabBarIcon: ({ color, size }) => (
                       <MaterialCommunityIcons name="trophy" color={color} size={size}></MaterialCommunityIcons>

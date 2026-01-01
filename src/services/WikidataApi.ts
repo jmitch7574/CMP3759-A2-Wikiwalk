@@ -10,7 +10,7 @@ const headers = {
 };
 
 const GetTerritoryFromLocationQuery = `
-	SELECT DISTINCT ?settlementCode ?settlementLabel ?wikipediaTitle ?article ?countryCode WHERE {{
+	SELECT DISTINCT ?settlementCode ?settlementLabel ?typeName ?wikipediaTitle ?article ?countryCode WHERE {{
   
     SERVICE wikibase:around {
         ?place wdt:P625 ?coord .
@@ -29,7 +29,9 @@ const GetTerritoryFromLocationQuery = `
         wd:Q5084,
         wd:Q15221373,
         wd:Q1549591,
-        wd:Q486972
+        wd:Q486972,
+        wd:Q1637706,
+        wd:Q896881
     ))
 
     ?settlement wdt:P17 ?country .
@@ -43,6 +45,9 @@ const GetTerritoryFromLocationQuery = `
 
     SERVICE wikibase:label { bd:serviceParam wikibase:language "en". }
     BIND(STRAFTER(STR(?settlement), "/entity/") AS ?settlementCode)
+
+    ?type rdfs:label ?typeName.  filter(lang(?typeName) = "en").
+
     }}
     ORDER BY ASC(?distance)
     LIMIT 1`
@@ -89,6 +94,12 @@ export async function GetUserArea(coords: LatLng): Promise<Area | null> {
     const wikipediaTitle = data.data['results']['bindings'][0]['wikipediaTitle']['value']
     const countryCode = data.data['results']['bindings'][0]['countryCode']['value']
     const articleUrl = data.data['results']['bindings'][0]['article']['value']
+    let areaType = data.data['results']['bindings'][0]['typeName']['value']
+
+    // Consolidate type values to 3 main ones
+    if (['city', 'fourth-class city', 'big city', 'million city', 'average city'].includes(areaType)) areaType = 'city';
+    if (['town', 'human settlement'].includes(areaType)) areaType = 'town';
+    if (['village', 'hamlet'].includes(areaType)) areaType = 'village';
 
     // Get remaining Area data from a second api request
     const wikipedaRequestURL = `https://en.wikipedia.org/api/rest_v1/page/summary/${wikipediaTitle}`;
@@ -107,11 +118,16 @@ export async function GetUserArea(coords: LatLng): Promise<Area | null> {
         name: displayName,
         articleUrl: articleUrl,
         thumbnailUrl: thumbnailUrl,
-        country: countryCode
+        type: areaType,
+        country: countryCode,
+        discoveredAt: null,
+        totalCount: null,
+        collectedCount: null
     };
+
 }
 
-export async function GetArticles(area: Area): Promise<Array<Article> | null> {
+export async function GetArticles(area: Area): Promise<Article[] | null> {
     let parsedQuery = GetArticlesInTerritoryQuery
         .replace('{location_QID}', area.id)
 
@@ -124,9 +140,9 @@ export async function GetArticles(area: Area): Promise<Array<Article> | null> {
     if (data.status != 200)
         return null;
 
-    let ArticleCollection: Array<Article> = [];
+    let ArticleCollection: Article[] = [];
 
-    data.data['results']['bindings'].map(async (element: { [x: string]: { [x: string]: any; }; }) => {
+    for (const element of data.data['results']['bindings']) {
         let articleId = element['articleCode']['value']
         let coords: LatLng = { latitude: parseFloat(element['lat']['value']) ?? 0, longitude: parseFloat(element['lon']['value']) ?? 0 }
         let url = element['article']['value']
@@ -149,8 +165,11 @@ export async function GetArticles(area: Area): Promise<Array<Article> | null> {
             thumbnailUrl: thumbnailUrl,
             parentId: area.id,
             coords: coords,
+            collectedAt: null
         };
 
+
+        console.log(currentPoint);
 
         let foundId = false;
         ArticleCollection.map((existingArticle, index) => {
@@ -158,12 +177,16 @@ export async function GetArticles(area: Area): Promise<Array<Article> | null> {
                 foundId = true;
         });
 
+        console.log(foundId);
+
         if (!foundId) {
             ArticleCollection.push(currentPoint);
+            console.log(ArticleCollection);
         }
 
-    });
+    };
 
+    console.log(ArticleCollection);
     return ArticleCollection;
 }
 

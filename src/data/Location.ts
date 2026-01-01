@@ -5,7 +5,8 @@ export type Area = {
     name: string
     articleUrl: string | null
     thumbnailUrl: string | null
-    country: string
+    country: string,
+    type: string,
     discoveredAt: Date | null
     collectedCount: number | null
     totalCount: number | null

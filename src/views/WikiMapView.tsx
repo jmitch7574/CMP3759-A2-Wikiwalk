@@ -1,13 +1,13 @@
 import { StyleSheet, TouchableOpacity, View, Text } from "react-native";
 import MapView, { LatLng, UserLocationChangeEvent } from 'react-native-maps';
-import React, { ReactNode, useContext, useRef, useState } from "react";
+import React, { ReactNode, useContext, useEffect, useRef, useState } from "react";
 import { MaterialCommunityIcons } from "@expo/vector-icons";
 
 import { GetArticles, GetUserArea } from "../services/WikidataApi";
 import CustomMarker from "../components/CustomMarker";
 import ArticlePopup, { ArticlePopupContext } from "../components/ArticlePopup";
 import { Haversine } from "../utils/MapHelper";
-import { Article } from "../data/Location";
+import { Area, Article } from "../data/Location";
 import { DatabaseContext, DatabaseProvider } from "../context/DatabaseContext";
 import { useNavigation } from "@react-navigation/native";
 
@@ -15,6 +15,7 @@ export default function WikiMapView() {
 
     const [location, setLocation] = useState<LatLng | null>(null);
     const [focusedArticle, setFocusedArticle] = useState<ArticlePopupContext | null>(null);
+    const [currentTerritory, setCurrentTerritory] = useState<Area | null>(null);
 
     const [currentPoints, setCurrentPoints] = useState<Array<Article> | null>(null);
 
@@ -37,6 +38,21 @@ export default function WikiMapView() {
             stylers: [{ visibility: 'off' }],
         },
     ];
+
+    useEffect(() => {
+        if (currentTerritory) {
+            const territoryComplete = currentTerritory.collectedCount == currentTerritory.totalCount;
+
+            navigation.setOptions({
+                headerTitle: `${currentTerritory.name} - ${currentTerritory.collectedCount} / ${currentTerritory.totalCount} ${territoryComplete ? '👑' : ''}`,
+            });
+        }
+        else {
+            navigation.setOptions({
+                headerTitle: `Map`,
+            });
+        }
+    }, [currentTerritory, focusedArticle])
 
     function GetMarkers() {
         if (!location) return;
@@ -81,24 +97,24 @@ export default function WikiMapView() {
         // Get Articles
         let territory = await GetUserArea(newLocation);
 
+        if (territory == null)
+            return;
+
+        await Database?.discoverArea(territory);
 
         territory = await Database.getFullAreaInfo(territory?.id ?? '');
 
         if (territory == null)
             return;
 
-        const territoryComplete = territory.collectedCount == territory.totalCount;
-        navigation.setOptions({
-            headerTitle: `${territory.name} - ${territory.collectedCount} / ${territory.totalCount} ${territoryComplete ? '👑' : ''}`,
-        });
+        setCurrentTerritory(territory);
 
-        await Database?.discoverArea(territory);
-
+        console.log(territory);
         const articles = await GetArticles(territory);
-
-        // Discover all articles before setting them in state
+        console.log(articles);
         if (articles) {
-            await Promise.all(articles.map(article => Database?.discoverArticle(article)));
+            // Discover all articles before setting them in state
+            await Database?.discoverArticles(articles);
         }
 
         setCurrentPoints(articles);
