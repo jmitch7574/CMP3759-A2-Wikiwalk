@@ -33,7 +33,7 @@ export const initDatabase = async (db: SQLite.SQLiteDatabase) => {
             latitude REAL NOT NULL,
             longitude REAL NOT NULL,
             collected_at DATETIME,
-            owner TEXT
+            owner TEXT,
 
             FOREIGN KEY (area_id) REFERENCES areas (id)
         );
@@ -112,7 +112,7 @@ export const dbService = {
 
         await db.withTransactionAsync(async () => {
             for (const article of articles) {
-                await db.runAsync('INSERT OR IGNORE INTO articles (id, name, article_url, thumbnail_url, area_id, latitude, longitude, owner) VALUES(?, ?, ?, ?, ?, ?, ?)',
+                await db.runAsync('INSERT OR IGNORE INTO articles (id, name, article_url, thumbnail_url, area_id, latitude, longitude, owner) VALUES(?, ?, ?, ?, ?, ?, ?, ?)',
                     [article.id, article.name, article.articleUrl, article.thumbnailUrl, article.parentId, article.coords.latitude, article.coords.longitude, article.owner]
                 )
             }
@@ -208,6 +208,26 @@ export const dbService = {
                         [trophy.id]
                     );
                 }
+            }
+        });
+    },
+
+    updateTrophyCategorWetherspoons: async (db: SQLite.SQLiteDatabase) => {
+        const countQuery = `
+            SELECT COUNT(collected_at) 
+            FROM areas a
+            WHERE owner = Q6109362`;
+
+        const matchingTrophies = TROPHIES.filter(t => t.requirement_type === 'wetherspoons');
+
+        await db.withTransactionAsync(async () => {
+            for (const trophy of matchingTrophies) {
+                await db.runAsync(`
+                    INSERT INTO user_trophies (id, value) 
+                    VALUES (?, (${countQuery})) 
+                    ON CONFLICT(id) DO UPDATE SET value = (${countQuery})`,
+                    [trophy.id]
+                );
             }
         });
     },

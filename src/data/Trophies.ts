@@ -5,7 +5,7 @@ export type Trophy = {
     title: string,
     description: string | null,
     category: string,
-    requirement_type: 'collect_articles' | 'discover_areas' | 'visit_countries' | 'complete_areas' | 'complete_village' | 'complete_town' | 'complete_city',
+    requirement_type: 'collect_articles' | 'discover_areas' | 'visit_countries' | 'complete_areas' | 'complete_village' | 'complete_town' | 'complete_city' | 'wetherspoons',
     requirement_value: number,
     icon_name?: keyof typeof MaterialCommunityIcons.glyphMap
 }
@@ -142,5 +142,14 @@ export const TROPHIES: Trophy[] = [
         requirement_type: 'complete_city',
         requirement_value: 1,
         icon_name: 'city'
+    },
+    {
+        id: 'special_wetherspoons_one',
+        title: 'For a Few Spoons More',
+        description: 'Collect a Wetherspoons Location',
+        category: 'Special',
+        requirement_type: 'wetherspoons',
+        requirement_value: 1,
+        icon_name: 'home'
     },
 ]
