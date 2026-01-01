@@ -15,7 +15,7 @@ export type Area = {
 export type Article = {
     id: string
     name: string
-    articleUrl: string
+    articleUrl: string | null,
     thumbnailUrl: string | null
     parentId: string
     coords: LatLng

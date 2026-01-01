@@ -58,10 +58,20 @@ const GetArticlesInTerritoryQuery = `
         
         ?place wdt:P625 ?coord.
 
-        ?article schema:about ?place.
-        ?article schema:isPartOf <https://en.wikipedia.org/>.
-        
-        
+        OPTIONAL {
+          ?article schema:about ?place.
+          ?article schema:isPartOf <https://en.wikipedia.org/>.
+        }
+
+        FILTER NOT EXISTS { ?place wdt:P31 wd:Q24574749. }
+        FILTER NOT EXISTS { ?place wdt:P31 wd:Q41176 }
+        FILTER NOT EXISTS { ?place wdt:P31 wd:Q18760388 }
+        FILTER NOT EXISTS { ?place wdt:P31/wdt:P279* wd:Q3947 }
+
+        FILTER NOT EXISTS { ?place wdt:P31 wd:Q9842 }
+        FILTER NOT EXISTS { ?place wdt:P31 wd:Q159334 }
+        FILTER NOT EXISTS { ?place wdt:P31 wd:Q2467461 }
+
         OPTIONAL { ?place wdt:P127 ?owner. }
 
         BIND(geof:latitude(?coord) AS ?lat)
@@ -126,72 +136,74 @@ export async function GetUserArea(coords: LatLng): Promise<Area | null> {
 }
 
 export async function GetArticles(area: Area): Promise<Article[] | null> {
-    let parsedQuery = GetArticlesInTerritoryQuery
-        .replace('{location_QID}', area.id)
+    try {
+        let parsedQuery = GetArticlesInTerritoryQuery
+            .replace('{location_QID}', area.id)
 
-    parsedQuery = encodeURI(parsedQuery);
+        parsedQuery = encodeURI(parsedQuery);
 
-    const finalURL = `${WdqsEndpoint}?query=${parsedQuery}&format=json`
+        const finalURL = `${WdqsEndpoint}?query=${parsedQuery}&format=json`;
 
-    const data = await axios.get(finalURL, { headers })
+        const data = await axios.get(finalURL, { headers })
 
-    if (data.status != 200)
-        return null;
+        if (data.status != 200)
+            return null;
 
-    let ArticleCollection: Article[] = [];
+        let ArticleCollection: Article[] = [];
 
-    for (const element of data.data['results']['bindings']) {
-        console.log(element);
-        let articleId = element['articleCode']['value']
-        let coords: LatLng = { latitude: parseFloat(element['lat']['value']) ?? 0, longitude: parseFloat(element['lon']['value']) ?? 0 }
-        let url = element['article']['value']
-        let displayName = element['placeLabel']['value']
-        const wikipediaTitle = element['wikipediaTitle']['value']
-        const owner = element?.owner?.value ?? null
+        for (const element of data.data['results']['bindings']) {
+            console.log(element);
+            let articleId = element['articleCode']['value']
+            let coords: LatLng = { latitude: parseFloat(element['lat']['value']) ?? 0, longitude: parseFloat(element['lon']['value']) ?? 0 }
+            let url = element?.article?.value ?? null
+            let displayName = element['placeLabel']['value']
+            const owner = element?.owner?.value ?? null
 
-        const wikipedaRequestURL = `https://en.wikipedia.org/api/rest_v1/page/summary/${wikipediaTitle}`;
-        const secondaryData = await axios.get(wikipedaRequestURL, { headers })
+            const wikipediaTitle = element?.wikipediaTitle?.value ?? null
 
-        if (secondaryData.status != 200)
-            continue;
+            let thumbnailUrl = null;
+            if (wikipediaTitle) {
+                const wikipedaRequestURL = `https://en.wikipedia.org/api/rest_v1/page/summary/${wikipediaTitle}`;
+                const secondaryData = await axios.get(wikipedaRequestURL, { headers })
 
-        const thumbnailUrl = secondaryData.data?.thumbnail?.source;
+                if (secondaryData.status == 200) thumbnailUrl = secondaryData.data?.thumbnail?.source;
+            }
 
 
-        let currentPoint: Article = {
-            id: articleId,
-            name: displayName,
-            articleUrl: url,
-            thumbnailUrl: thumbnailUrl,
-            parentId: area.id,
-            coords: coords,
-            collectedAt: null,
-            owner: owner
+            let currentPoint: Article = {
+                id: articleId,
+                name: displayName,
+                articleUrl: url,
+                thumbnailUrl: thumbnailUrl,
+                parentId: area.id,
+                coords: coords,
+                collectedAt: null,
+                owner: owner
+            };
+
+            let foundId = false;
+            ArticleCollection.map((existingArticle, index) => {
+                if (existingArticle.id == articleId)
+                    foundId = true;
+            });
+
+            if (!foundId) {
+                ArticleCollection.push(currentPoint);
+            }
+
         };
 
+        return ArticleCollection;
 
-        console.log(currentPoint);
+    }
 
-        let foundId = false;
-        ArticleCollection.map((existingArticle, index) => {
-            if (existingArticle.id == articleId)
-                foundId = true;
-        });
-
-        console.log(foundId);
-
-        if (!foundId) {
-            ArticleCollection.push(currentPoint);
-            console.log(ArticleCollection);
-        }
-
-    };
-
-    console.log(ArticleCollection);
-    return ArticleCollection;
+    catch (error) {
+        console.error(error);
+    }
 }
 
 export async function GetArticleText(article: Article) {
+    if (!article.articleUrl) return '';
     const article_url_ending = article.articleUrl.split('/').pop();
     const url = `https://en.wikipedia.org/w/api.php?format=json&action=query&prop=extracts&explaintext=true&titles=${article_url_ending}`
 

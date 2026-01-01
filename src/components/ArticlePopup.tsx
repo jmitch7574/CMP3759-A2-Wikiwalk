@@ -56,11 +56,13 @@ export default function ArticlePopup(props: ArticlePopupProps) {
                 {props.article.thumbnailUrl && <WikipediaImage style={{ margin: 10 }} url={props.article.thumbnailUrl} width={150} height={150} isCollected={props.isClose}></WikipediaImage>}
                 {props.article.collectedAt && <Text style={styles.dateCollected}>Collected {props.article.collectedAt.toLocaleDateString()}</Text>}
 
-                {props.isClose && (<RenderHTML
+                {props.isClose && props.article.articleUrl && (<RenderHTML
                     contentWidth={width}
                     source={{ html: articleText }}
                     tagsStyles={tagsStyles}
                 />)}
+
+                {props.isClose && !props.article.articleUrl && (<Text>There is no article available for this location</Text>)}
 
                 {!props.isClose && (<Text>{props.fallbackText}</Text>)}
             </BottomSheetScrollView>

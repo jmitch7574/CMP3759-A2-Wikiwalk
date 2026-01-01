@@ -27,7 +27,7 @@ export const initDatabase = async (db: SQLite.SQLiteDatabase) => {
         CREATE TABLE IF NOT EXISTS articles (
             id TEXT PRIMARY KEY NOT NULL,
             name TEXT NOT NULL,
-            article_url TEXT NOT NULL,
+            article_url TEXT,
             thumbnail_url TEXT,
             area_id TEXT,
             latitude REAL NOT NULL,

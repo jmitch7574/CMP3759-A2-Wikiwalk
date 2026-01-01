@@ -39,7 +39,7 @@ export function DatabaseProvider({ children }) {
     useEffect(() => {
         const setup = async () => {
             console.log('Setting up DB');
-            const database = await SQLite.openDatabaseAsync('test8.db');
+            const database = await SQLite.openDatabaseAsync('test12.db');
             console.log("DB Opened")
             await initDatabase(database);
             console.log("DB Initialized")
